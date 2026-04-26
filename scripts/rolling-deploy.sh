@@ -21,7 +21,11 @@ for SERVICE in "${SERVICES[@]}"; do
     sleep 8
 
     # Health check — derive the route from service name
-    ROUTE=$(echo $SERVICE | sed 's/-service/s/')
+    case $SERVICE in
+    users-service)    ROUTE="users" ;;
+    products-service) ROUTE="products" ;;
+    orders-service)   ROUTE="orders" ;;
+esac
 
     echo "Health checking /$ROUTE..."
     if curl -f http://localhost/$ROUTE > /dev/null 2>&1; then
