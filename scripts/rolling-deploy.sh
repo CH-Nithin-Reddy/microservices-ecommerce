@@ -7,6 +7,10 @@ COMPOSE_FILE="/var/lib/jenkins/workspace/microservices-ecommerce/docker-compose.
 
 echo "Starting rolling deployment..."
 
+# Make sure NGINX is running first
+docker compose -f $COMPOSE_FILE up -d nginx
+sleep 5
+
 for SERVICE in "${SERVICES[@]}"; do
     echo ""
     echo "Updating $SERVICE..."
@@ -20,12 +24,12 @@ for SERVICE in "${SERVICES[@]}"; do
     # Wait for it to start
     sleep 8
 
-    # Health check — derive the route from service name
+    # Map service to route
     case $SERVICE in
-    users-service)    ROUTE="users" ;;
-    products-service) ROUTE="products" ;;
-    orders-service)   ROUTE="orders" ;;
-esac
+        users-service)    ROUTE="users" ;;
+        products-service) ROUTE="products" ;;
+        orders-service)   ROUTE="orders" ;;
+    esac
 
     echo "Health checking /$ROUTE..."
     if curl -f http://localhost/$ROUTE > /dev/null 2>&1; then
