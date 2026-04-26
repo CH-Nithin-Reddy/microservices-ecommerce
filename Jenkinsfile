@@ -110,16 +110,15 @@ pipeline {
     }
 
     post {
-        success {
-            echo 'CD Pipeline completed successfully — all services deployed!'
-        }
-        failure {
-            echo 'Pipeline failed — triggering rollback'
-            sh '''
-                cd /home/ubuntu/microservices-ecommerce
-                docker compose down || true
-                docker compose up -d || true
-            '''
-        }
+    success {
+        echo 'CD Pipeline completed successfully — all services deployed!'
     }
+    failure {
+        echo 'Pipeline failed — triggering rollback'
+        sh '''
+            docker compose -f /var/lib/jenkins/workspace/microservices-ecommerce/docker-compose.yml down || true
+            docker compose -f /var/lib/jenkins/workspace/microservices-ecommerce/docker-compose.yml up -d || true
+        '''
+    }
+}
 }

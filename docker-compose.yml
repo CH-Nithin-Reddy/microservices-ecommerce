@@ -1,21 +1,20 @@
-
 services:
   users-service:
-    build: ./users-service
+    image: nithinq/users-service:latest
     ports:
       - "3001:3001"
     networks:
       - ecommerce-net
 
   products-service:
-    build: ./products-service
+    image: nithinq/products-service:latest
     ports:
       - "3002:3002"
     networks:
       - ecommerce-net
 
   orders-service:
-    build: ./orders-service
+    image: nithinq/orders-service:latest
     ports:
       - "3003:3003"
     networks:
