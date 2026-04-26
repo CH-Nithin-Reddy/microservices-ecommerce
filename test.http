@@ -1,0 +1,12 @@
+### Test Users through NGINX
+GET http://localhost/users HTTP/1.1
+
+###
+
+### Test Products through NGINX
+GET http://localhost/products HTTP/1.1
+
+###
+
+### Test Orders through NGINX
+GET http://localhost/orders HTTP/1.1

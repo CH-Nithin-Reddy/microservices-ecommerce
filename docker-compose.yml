@@ -1,0 +1,39 @@
+
+services:
+  users-service:
+    build: ./users-service
+    ports:
+      - "3001:3001"
+    networks:
+      - ecommerce-net
+
+  products-service:
+    build: ./products-service
+    ports:
+      - "3002:3002"
+    networks:
+      - ecommerce-net
+
+  orders-service:
+    build: ./orders-service
+    ports:
+      - "3003:3003"
+    networks:
+      - ecommerce-net
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - users-service
+      - products-service
+      - orders-service
+    networks:
+      - ecommerce-net
+
+networks:
+  ecommerce-net:
+    driver: bridge
