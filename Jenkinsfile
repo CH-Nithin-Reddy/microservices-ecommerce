@@ -86,15 +86,14 @@ pipeline {
         }
 
         stage('Deploy to EC2') {
-            steps {
-                echo 'Deploying to EC2...'
-                sh '''
-                    cd /home/ubuntu/microservices-ecommerce
-                    docker compose pull
-                    docker compose up -d
-                '''
-            }
-        }
+    steps {
+        echo 'Deploying to EC2...'
+        sh '''
+            docker compose -f /var/lib/jenkins/workspace/microservices-ecommerce/docker-compose.yml pull
+            docker compose -f /var/lib/jenkins/workspace/microservices-ecommerce/docker-compose.yml up -d
+        '''
+    }
+}
 
         stage('Health Check') {
             steps {
