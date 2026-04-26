@@ -85,13 +85,11 @@ pipeline {
             }
         }
 
-        stage('Deploy to EC2') {
+        stage('Deploy - Rolling') {
     steps {
-        echo 'Deploying to EC2...'
-        sh '''
-            docker compose -f /var/lib/jenkins/workspace/microservices-ecommerce/docker-compose.yml pull
-            docker compose -f /var/lib/jenkins/workspace/microservices-ecommerce/docker-compose.yml up -d
-        '''
+        echo 'Running rolling deployment...'
+        sh 'chmod +x /var/lib/jenkins/workspace/microservices-ecommerce/scripts/rolling-deploy.sh'
+        sh 'bash /var/lib/jenkins/workspace/microservices-ecommerce/scripts/rolling-deploy.sh'
     }
 }
 
