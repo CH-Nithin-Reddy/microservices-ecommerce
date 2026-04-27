@@ -69,23 +69,25 @@ pipeline {
             }
             steps {
                 echo 'Pushing images to Docker Hub...'
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh '''
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                        docker tag microservices-ecommerce-users-service:latest $DOCKER_USER/users-service:latest
-                        docker tag microservices-ecommerce-products-service:latest $DOCKER_USER/products-service:latest
-                        docker tag microservices-ecommerce-orders-service:latest $DOCKER_USER/orders-service:latest
-                        docker push $DOCKER_USER/users-service:latest
-                        docker push $DOCKER_USER/products-service:latest
-                        docker push $DOCKER_USER/orders-service:latest
-                        docker push $DOCKER_USER/users-service:previous || true
-                        docker push $DOCKER_USER/products-service:previous || true
-                        docker push $DOCKER_USER/orders-service:previous || true
-                    '''
+                retry(3) {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        sh '''
+                            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                            docker tag microservices-ecommerce-users-service:latest $DOCKER_USER/users-service:latest
+                            docker tag microservices-ecommerce-products-service:latest $DOCKER_USER/products-service:latest
+                            docker tag microservices-ecommerce-orders-service:latest $DOCKER_USER/orders-service:latest
+                            docker push $DOCKER_USER/users-service:latest
+                            docker push $DOCKER_USER/products-service:latest
+                            docker push $DOCKER_USER/orders-service:latest
+                            docker push $DOCKER_USER/users-service:previous || true
+                            docker push $DOCKER_USER/products-service:previous || true
+                            docker push $DOCKER_USER/orders-service:previous || true
+                        '''
+                    }
                 }
             }
         }
@@ -96,8 +98,10 @@ pipeline {
             }
             steps {
                 echo 'Running rolling deployment...'
-                sh 'chmod +x /var/lib/jenkins/workspace/microservices-ecommerce/scripts/rolling-deploy.sh'
-                sh 'bash /var/lib/jenkins/workspace/microservices-ecommerce/scripts/rolling-deploy.sh'
+                retry(3) {
+                    sh 'chmod +x /var/lib/jenkins/workspace/microservices-ecommerce/scripts/rolling-deploy.sh'
+                    sh 'bash /var/lib/jenkins/workspace/microservices-ecommerce/scripts/rolling-deploy.sh'
+                }
             }
         }
 
@@ -134,19 +138,19 @@ pipeline {
             withCredentials([string(credentialsId: 'slack-webhook', variable: 'SLACK_URL')]) {
                 sh """
                     curl -X POST -H 'Content-type: application/json' \
-                    --data '{"text":"✅ *Pipeline SUCCESS* — microservices-ecommerce\\nBranch: ${env.BRANCH_NAME}\\nBuild: #${env.BUILD_NUMBER}\\nAll services deployed successfully"}' \
+                    --data '{"text":" *Pipeline SUCCESS* — microservices-ecommerce\\nBranch: ${env.BRANCH_NAME}\\nBuild: #${env.BUILD_NUMBER}\\nAll services deployed successfully"}' \
                     \$SLACK_URL
                 """
             }
         }
         failure {
             echo 'Pipeline failed — triggering rollback'
-            sh 'docker compose -f /var/lib/jenkins/workspace/microservices-ecommerce/docker-compose.yml down || true'
-            sh 'docker compose -f /var/lib/jenkins/workspace/microservices-ecommerce/docker-compose.yml up -d || true'
+            sh 'chmod +x /var/lib/jenkins/workspace/microservices-ecommerce/scripts/rollback.sh || true'
+            sh 'bash /var/lib/jenkins/workspace/microservices-ecommerce/scripts/rollback.sh || true'
             withCredentials([string(credentialsId: 'slack-webhook', variable: 'SLACK_URL')]) {
                 sh """
                     curl -X POST -H 'Content-type: application/json' \
-                    --data '{"text":"❌ *Pipeline FAILED* — microservices-ecommerce\\nBranch: ${env.BRANCH_NAME}\\nBuild: #${env.BUILD_NUMBER}\\nCheck Jenkins logs immediately"}' \
+                    --data '{"text":" *ROLLBACK triggered* — microservices-ecommerce\\nBranch: ${env.BRANCH_NAME}\\nBuild: #${env.BUILD_NUMBER}\\nPrevious version restored"}' \
                     \$SLACK_URL
                 """
             }

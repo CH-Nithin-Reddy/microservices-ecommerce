@@ -5,6 +5,13 @@ services:
       - "3001:3001"
     networks:
       - ecommerce-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/users"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
 
   products-service:
     image: nithinq/products-service:latest
@@ -12,6 +19,13 @@ services:
       - "3002:3002"
     networks:
       - ecommerce-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3002/products"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
 
   orders-service:
     image: nithinq/orders-service:latest
@@ -19,6 +33,13 @@ services:
       - "3003:3003"
     networks:
       - ecommerce-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3003/orders"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
 
   nginx:
     image: nginx:latest
@@ -32,6 +53,7 @@ services:
       - orders-service
     networks:
       - ecommerce-net
+    restart: unless-stopped
 
 networks:
   ecommerce-net:
