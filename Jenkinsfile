@@ -129,26 +129,27 @@ pipeline {
     }
 
     post {
-    success {
-        echo 'Pipeline completed successfully!'
-        withCredentials([string(credentialsId: 'slack-webhook', variable: 'SLACK_URL')]) {
-            sh """
-                curl -X POST -H 'Content-type: application/json' \
-                --data '{"text":"✅ *Pipeline SUCCESS* — microservices-ecommerce\\nBranch: ${env.BRANCH_NAME}\\nBuild: #${env.BUILD_NUMBER}\\nAll services deployed successfully"}' \
-                \$SLACK_URL
-            """
+        success {
+            echo 'Pipeline completed successfully!'
+            withCredentials([string(credentialsId: 'slack-webhook', variable: 'SLACK_URL')]) {
+                sh """
+                    curl -X POST -H 'Content-type: application/json' \
+                    --data '{"text":"✅ *Pipeline SUCCESS* — microservices-ecommerce\\nBranch: ${env.BRANCH_NAME}\\nBuild: #${env.BUILD_NUMBER}\\nAll services deployed successfully"}' \
+                    \$SLACK_URL
+                """
+            }
         }
-    }
-    failure {
-        echo 'Pipeline failed — triggering rollback'
-        sh 'docker compose -f /var/lib/jenkins/workspace/microservices-ecommerce/docker-compose.yml down || true'
-        sh 'docker compose -f /var/lib/jenkins/workspace/microservices-ecommerce/docker-compose.yml up -d || true'
-        withCredentials([string(credentialsId: 'slack-webhook', variable: 'SLACK_URL')]) {
-            sh """
-                curl -X POST -H 'Content-type: application/json' \
-                --data '{"text":"❌ *Pipeline FAILED* — microservices-ecommerce\\nBranch: ${env.BRANCH_NAME}\\nBuild: #${env.BUILD_NUMBER}\\nCheck Jenkins logs immediately"}' \
-                \$SLACK_URL
-            """
+        failure {
+            echo 'Pipeline failed — triggering rollback'
+            sh 'docker compose -f /var/lib/jenkins/workspace/microservices-ecommerce/docker-compose.yml down || true'
+            sh 'docker compose -f /var/lib/jenkins/workspace/microservices-ecommerce/docker-compose.yml up -d || true'
+            withCredentials([string(credentialsId: 'slack-webhook', variable: 'SLACK_URL')]) {
+                sh """
+                    curl -X POST -H 'Content-type: application/json' \
+                    --data '{"text":"❌ *Pipeline FAILED* — microservices-ecommerce\\nBranch: ${env.BRANCH_NAME}\\nBuild: #${env.BUILD_NUMBER}\\nCheck Jenkins logs immediately"}' \
+                    \$SLACK_URL
+                """
+            }
         }
     }
 }
