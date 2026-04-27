@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Microservices Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #1e293b;
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #334155;
+    }
+
+    header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #38bdf8;
+    }
+
+    header span {
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .status-bar {
+      display: flex;
+      gap: 12px;
+      padding: 16px 40px;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #0f172a;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid #334155;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #94a3b8;
+    }
+
+    .dot.green { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+    .dot.red   { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+
+    .main {
+      padding: 32px 40px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: #1e293b;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #334155;
+    }
+
+    .card-header h2 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .badge {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    .badge.blue   { background: #1d4ed8; color: #bfdbfe; }
+    .badge.green  { background: #15803d; color: #bbf7d0; }
+    .badge.purple { background: #6d28d9; color: #ede9fe; }
+
+    .card-body { padding: 16px 20px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+      color: #64748b;
+      font-weight: 600;
+      padding: 6px 8px;
+      border-bottom: 1px solid #334155;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #1e293b;
+      color: #cbd5e1;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    tr:hover td { background: #0f172a; }
+
+    .loading {
+      color: #475569;
+      font-size: 13px;
+      padding: 20px 0;
+      text-align: center;
+    }
+
+    .error {
+      color: #ef4444;
+      font-size: 13px;
+      padding: 20px 0;
+      text-align: center;
+    }
+
+    .count {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 12px;
+      text-align: right;
+    }
+
+    .refresh-btn {
+      background: #334155;
+      border: none;
+      color: #94a3b8;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .refresh-btn:hover { background: #475569; color: #e2e8f0; }
+
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: #334155;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ Microservices Dashboard</h1>
+  <span id="last-updated">Loading...</span>
+</header>
+
+<div class="status-bar">
+  <div class="status-pill">
+    <div class="dot" id="dot-users"></div>
+    <span>Users Service</span>
+  </div>
+  <div class="status-pill">
+    <div class="dot" id="dot-products"></div>
+    <span>Products Service</span>
+  </div>
+  <div class="status-pill">
+    <div class="dot" id="dot-orders"></div>
+    <span>Orders Service</span>
+  </div>
+  <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+</div>
+
+<div class="main">
+
+  <!-- Users Card -->
+  <div class="card">
+    <div class="card-header">
+      <h2>👤 Users</h2>
+      <span class="badge blue">PORT 3001</span>
+    </div>
+    <div class="card-body">
+      <div id="users-table" class="loading">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Products Card -->
+  <div class="card">
+    <div class="card-header">
+      <h2>📦 Products</h2>
+      <span class="badge green">PORT 3002</span>
+    </div>
+    <div class="card-body">
+      <div id="products-table" class="loading">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Orders Card -->
+  <div class="card">
+    <div class="card-header">
+      <h2>🛒 Orders</h2>
+      <span class="badge purple">PORT 3003</span>
+    </div>
+    <div class="card-body">
+      <div id="orders-table" class="loading">Loading...</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Microservices E-Commerce · Built by Nithin · Deployed on AWS EC2
+</footer>
+
+<script>
+  async function fetchService(url, dotId) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+      document.getElementById(dotId).className = 'dot green';
+      return data;
+    } catch (e) {
+      document.getElementById(dotId).className = 'dot red';
+      return null;
+    }
+  }
+
+  function renderUsers(data) {
+    if (!data) {
+      document.getElementById('users-table').innerHTML = '<div class="error">⚠ Service unavailable</div>';
+      return;
+    }
+    let html = '<table><thead><tr><th>ID</th><th>Name</th></tr></thead><tbody>';
+    data.forEach(u => {
+      html += `<tr><td>#${u.id}</td><td>${u.name}</td></tr>`;
+    });
+    html += `</tbody></table><div class="count">${data.length} users</div>`;
+    document.getElementById('users-table').innerHTML = html;
+  }
+
+  function renderProducts(data) {
+    if (!data) {
+      document.getElementById('products-table').innerHTML = '<div class="error">⚠ Service unavailable</div>';
+      return;
+    }
+    let html = '<table><thead><tr><th>ID</th><th>Name</th><th>Price</th></tr></thead><tbody>';
+    data.forEach(p => {
+      html += `<tr><td>#${p.id}</td><td>${p.name}</td><td>$${p.price}</td></tr>`;
+    });
+    html += `</tbody></table><div class="count">${data.length} products</div>`;
+    document.getElementById('products-table').innerHTML = html;
+  }
+
+  function renderOrders(data) {
+    if (!data) {
+      document.getElementById('orders-table').innerHTML = '<div class="error">⚠ Service unavailable</div>';
+      return;
+    }
+    let html = '<table><thead><tr><th>ID</th><th>User</th><th>Product</th><th>Qty</th></tr></thead><tbody>';
+    data.forEach(o => {
+      html += `<tr><td>#${o.id}</td><td>User ${o.userId}</td><td>Product ${o.productId}</td><td>${o.quantity}</td></tr>`;
+    });
+    html += `</tbody></table><div class="count">${data.length} orders</div>`;
+    document.getElementById('orders-table').innerHTML = html;
+  }
+
+  async function loadAll() {
+    document.getElementById('last-updated').textContent = 'Refreshing...';
+
+    const [users, products, orders] = await Promise.all([
+      fetchService('/users', 'dot-users'),
+      fetchService('/products', 'dot-products'),
+      fetchService('/orders', 'dot-orders'),
+    ]);
+
+    renderUsers(users);
+    renderProducts(products);
+    renderOrders(orders);
+
+    const now = new Date().toLocaleTimeString();
+    document.getElementById('last-updated').textContent = `Last updated: ${now}`;
+  }
+
+  // Load on page open
+  loadAll();
+
+  // Auto refresh every 30 seconds
+  setInterval(loadAll, 30000);
+</script>
+
+</body>
+</html>
