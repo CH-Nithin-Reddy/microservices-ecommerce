@@ -92,6 +92,13 @@ pipeline {
         sh 'bash /var/lib/jenkins/workspace/microservices-ecommerce/scripts/rolling-deploy.sh'
     }
 }
+        stage('Deploy - Canary') {
+    steps {
+        echo 'Running canary deployment for users-service...'
+        sh 'chmod +x /var/lib/jenkins/workspace/microservices-ecommerce/scripts/canary-deploy.sh'
+        sh 'bash /var/lib/jenkins/workspace/microservices-ecommerce/scripts/canary-deploy.sh'
+    }
+}
 
         stage('Health Check') {
             steps {
