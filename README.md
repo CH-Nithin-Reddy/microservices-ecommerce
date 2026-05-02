@@ -1,6 +1,9 @@
-# Microservices E-Commerce Platform
+# 🔥 Project 2 — Full Design
 
-Production-grade microservices application with full CI/CD pipeline deployed on AWS EC2.
+## Project Title
+**Microservices E-Commerce App — Production Grade CI/CD**
+
+---
 
 ## Architecture
 
@@ -30,81 +33,167 @@ Developer pushes code
    └─────────┘ └─────────┘ └─────────┘
 ```
 
-## Tech Stack
+---
 
-| Tool | Purpose |
-|------|---------|
-| Node.js 18 | Microservices runtime |
-| Docker | Containerization |
-| Docker Compose | Multi-service orchestration |
-| NGINX | API Gateway |
-| Jenkins | CI/CD automation |
-| AWS EC2 | Cloud deployment |
-| GitHub | Source control |
-| Docker Hub | Image registry |
-| Slack | Notifications |
+## Full Phase Breakdown
 
-## Services
+| Phase | Topic | What We Cover |
+|---|---|---|
+| **1** | App Development | Build 3 microservices |
+| **2** | Dockerize | Dockerfile per service |
+| **3** | Docker Compose | Run all services together |
+| **4** | NGINX Gateway | Route traffic to services |
+| **5** | GitHub Setup | Mono repo + structure |
+| **6** | Jenkins Setup | Fresh install on new EC2 |
+| **7** | CI Pipeline | Build + Test per service |
+| **8** | CD Pipeline | Deploy to EC2 |
+| **9** | Rolling Deployment | Zero downtime rolling update |
+| **10** | Canary Deployment | 10% traffic → 100% |
+| **11** | PR Trigger | Auto trigger on Pull Request |
+| **12** | Notifications | Slack/Email on success/fail |
+| **13** | Resilience | Retry, rollback, health checks |
+| **14** | Final Polish | README + Resume writeup |
 
-| Service | Port | Endpoints |
-|---------|------|-----------|
-| Users | 3001 | GET /users, GET /users/:id, POST /users |
-| Products | 3002 | GET /products, GET /products/:id, POST /products |
-| Orders | 3003 | GET /orders, GET /orders/:id, POST /orders |
+---
 
-## How to Run Locally
+## Microservices Detail
 
-```bash
-git clone https://github.com/CH-Nithin-Reddy/microservices-ecommerce.git
-cd microservices-ecommerce
-docker compose up --build
+### Service 1 — Users Service (Port 3001)
+```
+GET  /users          → list all users
+GET  /users/:id      → get one user
+POST /users          → create user
 ```
 
-Test the services:
-```bash
-curl http://localhost/users
-curl http://localhost/products
-curl http://localhost/orders
+### Service 2 — Products Service (Port 3002)
+```
+GET  /products       → list all products
+GET  /products/:id   → get one product
+POST /products       → create product
 ```
 
-## CI/CD Pipeline
+### Service 3 — Orders Service (Port 3003)
+```
+GET  /orders         → list all orders
+GET  /orders/:id     → get one order
+POST /orders         → create order
+```
 
-Every push to main triggers Jenkins automatically:
+---
 
-1. Clone repository
-2. Build all Docker images
-3. Test all services through NGINX
-4. Tag current images as previous (for rollback)
-5. Push images to Docker Hub
-6. Rolling deployment — updates one service at a time
-7. Canary deployment — 10% traffic test before full rollout
-8. Health check all services
-9. Slack notification on success or failure
+## File Structure
+```
+microservices-ecommerce/
+├── users-service/
+│   ├── app.js
+│   ├── package.json
+│   └── Dockerfile
+├── products-service/
+│   ├── app.js
+│   ├── package.json
+│   └── Dockerfile
+├── orders-service/
+│   ├── app.js
+│   ├── package.json
+│   └── Dockerfile
+├── nginx/
+│   └── nginx.conf
+├── docker-compose.yml
+├── Jenkinsfile
+└── README.md
+```
 
-## Deployment Strategies
+---
 
-**Rolling Deployment** — updates each service one at a time so there is always a version running. Zero downtime.
+## CI/CD Pipeline Stages
 
-**Canary Deployment** — deploys to a small container first, monitors for 60 seconds, then promotes to full deployment if healthy. Instant rollback if it fails.
+```
+Push to GitHub
+      ↓
+Webhook triggers Jenkins
+      ↓
+┌─────────────────────────────────────┐
+│ Stage 1: Clone                       │
+│ Stage 2: Build All Services          │
+│ Stage 3: Test All Services           │
+│ Stage 4: Docker Build per Service    │
+│ Stage 5: Docker Push to Docker Hub   │
+│ Stage 6: Deploy (Rolling/Canary)     │
+│ Stage 7: Health Check All Services   │
+│ Stage 8: Notify (Slack/Email)        │
+└─────────────────────────────────────┘
+      ↓
+Auto Rollback if any stage fails
+```
+
+---
+
+## Deployment Strategies We'll Use
+
+### Rolling Deployment
+```
+Update service one by one:
+Users ✅ → Products ✅ → Orders ✅
+Never take all down at once
+Zero downtime
+```
+
+### Canary Deployment
+```
+Deploy new version to 10% traffic
+      ↓
+Monitor health
+      ↓
+If healthy → push to 100%
+If fails   → rollback instantly
+```
+
+---
 
 ## Resilience Features
 
-| Feature | How It Works |
-|---------|-------------|
-| Retry | Docker Hub push retries up to 3 times on failure |
-| Auto restart | Containers restart automatically if they crash |
-| Health checks | Docker monitors each service every 10 seconds |
-| Rollback | Previous image restored automatically on pipeline failure |
-| Slack alerts | Instant notification on success, failure or rollback |
+| Feature | Implementation |
+|---|---|
+| Retry | retry(3) on build + deploy |
+| Rollback | Auto on any failure |
+| Health Checks | curl each service after deploy |
+| Previous Version | Always tag :previous before deploy |
 
-## Triggers
-
-| Trigger | How |
-|---------|-----|
-| Push to main | GitHub Webhook → full pipeline including deploy |
-| Pull Request | GitHub Webhook → build and test only, no deploy |
-| Manual | Jenkins Build Now button |
-```
 ---
 
+## Triggers We'll Cover
+
+| Trigger | How |
+|---|---|
+| Push to main | GitHub Webhook |
+| Pull Request | GitHub PR Webhook |
+| Manual | Build Now button |
+
+---
+
+## Notifications
+
+| Event | Notification |
+|---|---|
+| Pipeline Success | Slack message + Email |
+| Pipeline Failure | Slack alert + Email |
+| Rollback triggered | Slack alert |
+
+---
+
+## Tech Stack — Complete
+
+| Tool | Version | Purpose |
+|---|---|---|
+| Node.js | 18 | Microservices |
+| Docker | 26+ | Containerization |
+| Docker Compose | v2 | Multi service orchestration |
+| NGINX | latest | API Gateway |
+| Jenkins | 2.555+ | CI/CD Automation |
+| AWS EC2 | t2.medium | Cloud server |
+| GitHub | - | Source control |
+| Docker Hub | - | Image registry |
+| Slack | - | Notifications |
+
+---
 
